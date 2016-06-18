@@ -104,6 +104,8 @@ struct List {
         if (capacity() >= required_capacity) {
             return;
         }
+        required_capacity = max(required_capacity, 2*capacity());
+        required_capacity = max(required_capacity, 16);
         T* new_elements = new T[required_capacity];
         copy_n(new_elements, elements, size());
         delete [] elements;
