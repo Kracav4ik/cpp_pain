@@ -1,0 +1,3 @@
+files = Glob('*.cpp')
+
+Return('files')

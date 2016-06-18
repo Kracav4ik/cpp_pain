@@ -1,0 +1,9 @@
+import os
+
+env = DefaultEnvironment(ENV=os.environ, tools=['mingw', 'qt5'])
+
+sources = env.SConscript('src/SConscript', variant_dir='build', duplicate=0)
+
+program = env.Program('bin/main', sources)
+
+env.Default(program)
