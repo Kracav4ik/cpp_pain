@@ -2,7 +2,7 @@
 #include <string.h>
 
 //
-// String
+// common stuff
 //
 
 int max(int x1, int x2) {
@@ -23,98 +23,6 @@ void copy_n(T* to, const T* from, int count) {
             to[i] = from[i];
         }
     }
-}
-
-struct String {
-    char* str;
-    int len;
-    
-    String(const char* s = "") {
-        len = strlen(s);
-        str = new char [len + 1];
-        copy_n(str, s, len + 1);
-        // printf("  constructor: string at [%p] for str %p '%s'\n", this, str, str);
-    }
-    
-    String(const String& other) {
-        len = strlen(other.str);
-        str = new char [len + 1];
-        copy_n(str, other.str, len + 1);
-        // printf("  copy CTOR from [%p] str %p '%s'\n", &other, other.str, other.str);
-    }
-    
-    String& operator=(const String& other) {
-        if (this != &other) {
-            // printf("  copy OPER from [%p] str %p '%s' to [%p] str %p '%s'\n", &other, other.str, other.str, this, str, str);
-            delete[] str;
-            len = strlen(other.str);
-            str = new char [len + 1];
-            copy_n(str, other.str, len + 1);
-        } else {
-            // printf("  copy OPER from [%p] str %p '%s' to ITSELF FUCK YOU\n", &other, other.str, other.str);
-        }
-        return *this;
-    }
-    
-    ~String() {
-        // printf("  destructor:  string at [%p] for str %p '%s'\n", this, str, str);
-        delete[] str;
-    }
-    
-    String& operator+=(const String& other) {
-        char* new_str = new char [len + other.len + 1];
-        copy_n(new_str, str, len);
-        copy_n(new_str + len, other.str, other.len + 1);
-        delete[] str;
-        str = new_str;
-        len += other.len;
-        return *this;
-    }
-    
-    String& operator+=(char c) {
-        char* new_str = new char [len + 2];
-        copy_n(new_str, str, len);
-        new_str[len] = c;
-        new_str[len + 1] = 0;
-        delete[] str;
-        str = new_str;
-        len += 1;
-        return *this;
-    }
-    
-    void print() const {
-        printf("{String [%p] '%s' len %d}\n", this, str, len);
-    }
-};
-
-String operator+(const String& s1, const String& s2) {
-    String result = s1;
-    result += s2;
-    return result;
-}
-
-bool operator<(const String& s1, const String& s2) {
-    for (int i = 0; true; i += 1) {
-        if (s1.str[i] == 0) {
-            return true;
-        } else if(s2.str[i] == 0) {
-            return false;
-        } else if (s1.str[i] < s2.str[i]){
-            return true;
-        } else if (s1.str[i] > s2.str[i]){
-            return false;
-        }
-    }
-}
-
-String obj_to_string(int i) {
-    char buf[30];
-    sprintf(buf, "%d", i);
-    return String(buf);
-}
-
-String obj_to_string(const String& s) {
-    return s;
 }
 
 //
@@ -217,21 +125,106 @@ struct List {
         _size = max(size(), index + 1);
         return (*this)[index];
     }
-    
-    String to_string() const {
-        String result("[");
-        for (int i = 0; i < size(); i += 1){
-            T d = elements[i];
-            if (i) {
-                result += String(", ");
-            }
-            result += obj_to_string(d);
-        }
-        result += String("]");
-        return result;
-    }
-    
 };
+
+//
+// String
+//
+
+struct String {
+    char* str;
+    int len;
+    
+    String(const char* s = "");
+    String(const String& other);
+
+    String& operator=(const String& other);
+    
+    ~String();
+    
+    String& operator+=(const String& other);
+    
+    String& operator+=(char c);
+    
+    void print() const;
+};
+
+String::String(const char* s) {
+    len = strlen(s);
+    str = new char [len + 1];
+    copy_n(str, s, len + 1);
+    // printf("  constructor: string at [%p] for str %p '%s'\n", this, str, str);
+}
+
+String::String(const String& other) {
+    len = strlen(other.str);
+    str = new char [len + 1];
+    copy_n(str, other.str, len + 1);
+    // printf("  copy CTOR from [%p] str %p '%s'\n", &other, other.str, other.str);
+}
+
+String& String::operator=(const String& other) {
+    if (this != &other) {
+        // printf("  copy OPER from [%p] str %p '%s' to [%p] str %p '%s'\n", &other, other.str, other.str, this, str, str);
+        delete[] str;
+        len = strlen(other.str);
+        str = new char [len + 1];
+        copy_n(str, other.str, len + 1);
+    } else {
+        // printf("  copy OPER from [%p] str %p '%s' to ITSELF FUCK YOU\n", &other, other.str, other.str);
+    }
+    return *this;
+}
+
+String::~String() {
+    // printf("  destructor:  string at [%p] for str %p '%s'\n", this, str, str);
+    delete[] str;
+}
+
+String& String::operator+=(const String& other) {
+    char* new_str = new char [len + other.len + 1];
+    copy_n(new_str, str, len);
+    copy_n(new_str + len, other.str, other.len + 1);
+    delete[] str;
+    str = new_str;
+    len += other.len;
+    return *this;
+}
+
+String& String::operator+=(char c) {
+    char* new_str = new char [len + 2];
+    copy_n(new_str, str, len);
+    new_str[len] = c;
+    new_str[len + 1] = 0;
+    delete[] str;
+    str = new_str;
+    len += 1;
+    return *this;
+}
+
+void String::print() const {
+    printf("{String [%p] '%s' len %d}\n", this, str, len);
+}
+
+String operator+(const String& s1, const String& s2) {
+    String result = s1;
+    result += s2;
+    return result;
+}
+
+bool operator<(const String& s1, const String& s2) {
+    for (int i = 0; true; i += 1) {
+        if (s1.str[i] == 0) {
+            return true;
+        } else if(s2.str[i] == 0) {
+            return false;
+        } else if (s1.str[i] < s2.str[i]){
+            return true;
+        } else if (s1.str[i] > s2.str[i]){
+            return false;
+        }
+    }
+}
 
 //
 // LongInt
@@ -281,22 +274,6 @@ struct LongInt {
         return *this;
     }
     
-    String to_string() const {
-        String result("");
-        bool nonzero_found = false;
-        for (int i = _digits.size() - 1; i > -1; i -= 1){
-            int d = _digits[i];
-            if (d != 0 || nonzero_found) {
-                result += digit_to_char(d);
-                nonzero_found = true;
-            }
-        }
-        if (!nonzero_found){
-            result += '0';
-        }
-        return result;
-    }
-
     LongInt& operator*=(const LongInt& other) {
         LongInt result;
         
@@ -332,57 +309,6 @@ LongInt operator+(const LongInt& i1, const LongInt& i2) {
     LongInt result = i1;
     result += i2;
     return result;
-}
-
-template <typename T>
-void print(const List<T>& list, const char* end = "") {
-    printf("%s%s", list.to_string().str, end);
-}
-
-void test() {
-    List<int> list;
-    String s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.insert(0, 3);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.insert(1, 1);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.insert(1, 2);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.insert(0, 4);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.insert(0, 5);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.erase(2);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.erase(2);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.erase(1);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.erase(1);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
-    
-    list.erase(0);
-    s = list.to_string();
-    printf("list = %s\n", s.str);
 }
 
 //
@@ -472,6 +398,55 @@ struct Tree {
     }
     
 };
+
+//
+// utils
+//
+
+String obj_to_string(int i) {
+    char buf[30];
+    sprintf(buf, "%d", i);
+    return String(buf);
+}
+
+String obj_to_string(const String& s) {
+    return s;
+}
+
+template <typename T>
+String obj_to_string(const List<T>& list) {
+    String result("[");
+    for (int i = 0; i < list.size(); i += 1){
+        T d = list.elements[i];
+        if (i) {
+            result += String(", ");
+        }
+        result += obj_to_string(d);
+    }
+    result += String("]");
+    return result;
+}
+
+String obj_to_string(const LongInt& number) {
+    String result("");
+    bool nonzero_found = false;
+    for (int i = number.digits().size() - 1; i > -1; i -= 1){
+        int d = number.digits()[i];
+        if (d != 0 || nonzero_found) {
+            result += digit_to_char(d);
+            nonzero_found = true;
+        }
+    }
+    if (!nonzero_found){
+        result += '0';
+    }
+    return result;
+}
+
+template <typename T>
+void print(const List<T>& list, const char* end = "") {
+    printf("%s%s", list.to_string().str, end);
+}
 
 void clear(){
     for (int i = 0; i < 97; i += 1) {
