@@ -1,3 +1,10 @@
-files = Glob('*.cpp')
+Import('env')
+
+env.EnableQt5Modules([
+    'QtCore',
+    'QtWidgets',
+])
+
+files = env.Glob('*.cpp')
 
 Return('files')
