@@ -1,12 +1,9 @@
 #include <QApplication>
-#include <QDialog>
-#include <QLabel>
- 
+
+#include "main_window.h"
+
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
-    QDialog *dialog = new QDialog;
-    QLabel *label = new QLabel(dialog);
-    label->setText("<font color=red>Hello, World!</font>");
-    dialog->show();
+    MainWindow* window = new MainWindow();
     return app.exec();
 }

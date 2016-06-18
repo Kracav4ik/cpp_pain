@@ -5,6 +5,8 @@ env.EnableQt5Modules([
     'QtWidgets',
 ])
 
+env.Uic5(env.Glob('*.ui'))
+
 files = env.Glob('*.cpp')
 
 Return('files')
