@@ -41,6 +41,16 @@ struct List {
         _capacity = 0;
     }
     
+    List(const T* array, int array_size) {
+        elements = NULL;
+        _size = 0;
+        _capacity = 0;
+
+        ensure_capacity(array_size);
+        copy_n(elements, array, array_size);
+        _size = array_size;
+    }
+    
     ~List() {
         delete[] elements;
     }
@@ -125,85 +135,67 @@ struct List {
         _size = max(size(), index + 1);
         return (*this)[index];
     }
+    
+    List<T>& operator+=(const List<T>& other) {
+       ensure_capacity(size() + other.size());
+       copy_n(elements + size(), other.elements, other.size());
+       _size += other.size();
+       return *this;
+    }
 };
+
+template <typename T>
+List<T> operator+(const List<T>& list1, const List<T>& list2) {
+    List<T> result = list1;
+    result += list2;
+    return result;
+}
 
 //
 // String
 //
 
 struct String {
-    char* str;
-    int len;
+    List<char> _str;
     
     String(const char* s = "");
-    String(const String& other);
-
-    String& operator=(const String& other);
-    
-    ~String();
     
     String& operator+=(const String& other);
     
     String& operator+=(char c);
     
+    const char* str() const;
+    int len() const;
+    
     void print() const;
 };
 
-String::String(const char* s) {
-    len = strlen(s);
-    str = new char [len + 1];
-    copy_n(str, s, len + 1);
-    // printf("  constructor: string at [%p] for str %p '%s'\n", this, str, str);
-}
-
-String::String(const String& other) {
-    len = strlen(other.str);
-    str = new char [len + 1];
-    copy_n(str, other.str, len + 1);
-    // printf("  copy CTOR from [%p] str %p '%s'\n", &other, other.str, other.str);
-}
-
-String& String::operator=(const String& other) {
-    if (this != &other) {
-        // printf("  copy OPER from [%p] str %p '%s' to [%p] str %p '%s'\n", &other, other.str, other.str, this, str, str);
-        delete[] str;
-        len = strlen(other.str);
-        str = new char [len + 1];
-        copy_n(str, other.str, len + 1);
-    } else {
-        // printf("  copy OPER from [%p] str %p '%s' to ITSELF FUCK YOU\n", &other, other.str, other.str);
-    }
-    return *this;
-}
-
-String::~String() {
-    // printf("  destructor:  string at [%p] for str %p '%s'\n", this, str, str);
-    delete[] str;
+String::String(const char* s)
+    : _str(s, strlen(s) + 1)
+{
 }
 
 String& String::operator+=(const String& other) {
-    char* new_str = new char [len + other.len + 1];
-    copy_n(new_str, str, len);
-    copy_n(new_str + len, other.str, other.len + 1);
-    delete[] str;
-    str = new_str;
-    len += other.len;
+    _str.erase(len());
+    _str += other._str;
     return *this;
 }
 
 String& String::operator+=(char c) {
-    char* new_str = new char [len + 2];
-    copy_n(new_str, str, len);
-    new_str[len] = c;
-    new_str[len + 1] = 0;
-    delete[] str;
-    str = new_str;
-    len += 1;
+    _str.insert(len(), c);
     return *this;
 }
 
+const char* String::str() const {
+    return _str.elements;
+}
+
+int String::len() const {
+    return _str.size() - 1;
+}
+
 void String::print() const {
-    printf("{String [%p] '%s' len %d}\n", this, str, len);
+    printf("{String [%p] '%s' len %d}\n", this, str(), len());
 }
 
 String operator+(const String& s1, const String& s2) {
@@ -214,13 +206,13 @@ String operator+(const String& s1, const String& s2) {
 
 bool operator<(const String& s1, const String& s2) {
     for (int i = 0; true; i += 1) {
-        if (s1.str[i] == 0) {
+        if (s1.str()[i] == 0) {
             return true;
-        } else if(s2.str[i] == 0) {
+        } else if(s2.str()[i] == 0) {
             return false;
-        } else if (s1.str[i] < s2.str[i]){
+        } else if (s1.str()[i] < s2.str()[i]){
             return true;
-        } else if (s1.str[i] > s2.str[i]){
+        } else if (s1.str()[i] > s2.str()[i]){
             return false;
         }
     }
