@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#pragma once
+
 //
 // common stuff
 //
@@ -633,7 +635,7 @@ String obj_to_string(const List<T>& list) {
     String result("[");
     for (int i = 0; i < list.size(); i += 1){
         T d = list.elements[i];
-        if (i) {
+        if (i > 0) {
             result += String(", ");
         }
         result += obj_to_string(d);
