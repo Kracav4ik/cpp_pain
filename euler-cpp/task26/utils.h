@@ -1,7 +1,7 @@
+#pragma once
+
 #include <stdio.h>
 #include <string.h>
-
-#pragma once
 
 //
 // common stuff
@@ -458,22 +458,9 @@ LongInt operator*(const LongInt& l1, const LongInt& l2) {
     return result;
 }
 
-LongInt operator*(const LongInt& l, int i) {
-    LongInt result = i;
-    result *= l;
-    return result;
-}
-
 LongInt operator+(const LongInt& l1, const LongInt& l2) {
     LongInt result = l1;
     result += l2;
-    return result;
-
-}
-
-LongInt operator+(const LongInt& l, int i) {
-    LongInt result = i;
-    result += l;
     return result;
 
 }
@@ -500,20 +487,16 @@ bool operator<(const LongInt& l1, const LongInt& l2) {
     return false;
 }
 
-bool operator<(const LongInt& l, int i) {
-    LongInt m = i;
-    return l < m;
-}
-
-LongInt fastpow(const LongInt& a, int b) {
-    if (b <= 3) {
-        LongInt num(1);
+template <typename T>
+T fastpow(T a, T b) {
+    if (b < 4) {
+        T num = 1;
         for (int i = 1; i <= b; i += 1){
             num *= a;
         }
         return num;
     }
-    LongInt result = fastpow(a, b/2);
+    T result = fastpow(a, b/2);
     if (b % 2 == 1) {
         return result * result * a;
     } else {
@@ -521,7 +504,8 @@ LongInt fastpow(const LongInt& a, int b) {
     }
 }
 
-LongInt pow(int a, int b) {
+template <typename T>
+T pow(T a, T b) {
     return fastpow(a, b);
 }
 

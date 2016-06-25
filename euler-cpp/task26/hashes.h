@@ -1,8 +1,8 @@
+#pragma once
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
-#pragma once
 
 #include "utils.h"
 
@@ -11,7 +11,15 @@ int hash(int i){
 }
 
 int hash(const char* s){
-    return 0;
+    int x = 31;
+    int size_s = strlen(s);
+    int result = 0;
+    for (int i = 0; i < size_s; i += 1) {
+        int p = size_s - i;
+        char c = s[i];
+        result += pow(x, p) * c;
+    }
+    return result;    
 }
 
 template < typename T > 
@@ -21,13 +29,13 @@ struct Bucket {
     Bucket(){
     }
     
-    void add(T i){
-        buck.append(i);
+    void add(T t){
+        buck.append(t);
     }
     
-    bool contains(T i) {
+    bool contains(T t) {
         for (int j = 0; j < buck.size(); j += 1) {
-            if (i == buck[j]) {
+            if (t == buck[j]) {
                 return true;
             }
         }
@@ -44,29 +52,27 @@ struct HashSet {
     
     HashSet() {
         _size = 0;
-        Bucket<T> b1;
-        Bucket<T> b2;
-        buckets.append(b1);
-        buckets.append(b2);
+        buckets.append(Bucket<T>());
+        buckets.append(Bucket<T>());
     }
     
-    void add(T i){
-        if (contains(i)) {
+    void add(T t){
+        if (contains(t)) {
             return;
         }
         _size += 1;
-        int h = hash(i);
+        int h = hash(t);
         h = h % buckets.size();
-        buckets[h].add(i);
+        buckets[h].add(t);
         if (size() * 0.75 > buckets.size()){
             rehash();
         }
     }
     
-    bool contains(T i){
-        int h = hash(i);
+    bool contains(T t){
+        int h = hash(t);
         h = h % buckets.size();
-        return buckets[h].contains(i);
+        return buckets[h].contains(t);
     }
     
     int size(){
@@ -88,7 +94,8 @@ struct HashSet {
     }
 };
 
-/* template < typename T > 
+/*
+template < typename T > 
 String obj_to_string(const HashSet<T>& set) {
     String result("{");
     
@@ -114,15 +121,14 @@ String obj_to_string(const HashSet<T>& set) {
 template < typename T > 
 String obj_to_string(const HashSet<T>& set) {
     String result("{");
-        int set_size = set.buckets.size();
+    int set_size = set.buckets.size();
     for (int i = 0; i < set_size; i += 1) {
         result += obj_to_string(set.buckets[i].buck);
         if (i < set_size - 1){
-        result += String("; ");
+            result += String("; ");
         }
     }
-    
-        
+
     result += String("}");
     return result;
 }
@@ -150,4 +156,9 @@ void test(){
     } else {        
         printf("not contain\n");
     }
+    
+    printf("\ndebug\nfor \"abc\" Hash = %d\n", hash("abc"));
+    printf("for \"cba\" Hash = %d\n", hash("cba"));
+    printf("for \"abcdef\" Hash = %d\n", hash("abcdef"));
+    printf("for \"000\" Hash = %d\n", hash("000"));
 }
