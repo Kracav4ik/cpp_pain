@@ -1,0 +1,68 @@
+#encoding: utf-8
+
+import os
+
+SFML_ROOT = 'libs/SFML-2.3.2'
+
+env = DefaultEnvironment(ENV=os.environ, tools=['mingw'])
+
+static_sfml = True # TODO: False не работает, надо добавить копирование dll
+debug_sfml = False
+
+GRAPHICS = 'sfml-graphics'
+WINDOW = 'sfml-window'
+AUDIO = 'sfml-audio'
+NETWORK = 'sfml-network'
+SYSTEM = 'sfml-system'
+sfml_deps = {
+    GRAPHICS: [WINDOW, SYSTEM, 'opengl32', 'freetype', 'jpeg'],
+    WINDOW: [SYSTEM, 'opengl32', 'winmm', 'gdi32'],
+    AUDIO: [SYSTEM, 'opengl32', 'flac', 'vorbisenc', 'vorbisfile', 'vorbis', 'ogg'],
+    NETWORK: [SYSTEM, 'ws2_32'],
+    SYSTEM: ['winmm'],
+}
+
+def sfml_libs(*libs):
+    """Генерирует список либ для линкера
+    """
+    result = []
+    def fix_name(lib_name):
+        if lib_name not in sfml_deps:
+            return lib_name
+        if static_sfml:
+            lib_name += '-s'
+        if debug_sfml:
+            lib_name += '-d'
+        return lib_name
+    
+    def flatten_deps(name):
+        flattened = []
+        if name in sfml_deps:
+            flattened = [name]
+            for direct_dep in sfml_deps[name]:
+                for dep in flatten_deps(direct_dep):
+                    if dep not in flattened:
+                        flattened.append(dep)
+        elif static_sfml:
+            flattened = [name]
+        return flattened
+
+    for lib in libs:
+        for dep in flatten_deps(lib):
+            result.append(fix_name(dep))
+    return result
+
+env.Append(
+    CPPPATH=os.path.join(SFML_ROOT, 'include'),
+    LIBPATH=os.path.join(SFML_ROOT, 'lib'),
+    LIBS=sfml_libs(WINDOW),
+)
+
+if static_sfml:
+    env.Append(CPPDEFINES='SFML_STATIC')
+
+sources = env.SConscript('src/SConscript', exports='env', variant_dir='build')
+
+program = env.Program('bin/main', sources)
+
+env.Default(program)
