@@ -55,7 +55,7 @@ def sfml_libs(*libs):
 env.Append(
     CPPPATH=os.path.join(SFML_ROOT, 'include'),
     LIBPATH=os.path.join(SFML_ROOT, 'lib'),
-    LIBS=sfml_libs(WINDOW),
+    LIBS=sfml_libs(GRAPHICS),
 )
 
 if static_sfml:
