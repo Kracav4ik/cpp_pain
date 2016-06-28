@@ -163,6 +163,19 @@ List<T> operator+(const List<T>& list1, const List<T>& list2) {
     return result;
 }
 
+template <typename T>
+bool operator==(const List<T>& list1, const List<T>& list2){
+    if (list1.size() != list2.size()){ return false; }
+    
+    for (int i = 0; i < list1.size() ;i += 1) {
+        if(!(list1[i] == list2[i] )) {
+            return false;
+        } 
+    }
+    return true; 
+}
+
+
 //
 // String
 //
@@ -242,6 +255,10 @@ bool operator<(const String& s1, const String& s2) {
             return false;
         }
     }
+}
+
+bool operator==(const String& s1, const String& s2) {
+    return s1._str == s2._str;
 }
 
 //

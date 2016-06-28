@@ -22,38 +22,40 @@ int hash(const char* s){
     return result;    
 }
 
-template < typename T > 
-struct Bucket {
-    List<T> buck;
-    
-    Bucket(){
-    }
-    
-    void add(T t){
-        buck.append(t);
-    }
-    
-    bool contains(T t) {
-        for (int j = 0; j < buck.size(); j += 1) {
-            if (t == buck[j]) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    
-};
+int hash(const String& s) {
+    return hash(s.str());
+}
 
 template < typename T > 
 struct HashSet {
+    struct Bucket {
+        List<T> buck;
+        
+        Bucket(){
+        }
+        
+        void add(T t){
+            buck.append(t);
+        }
+        
+        bool contains(T t) {
+            for (int j = 0; j < buck.size(); j += 1) {
+                if (t == buck[j]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+    
+    
     int _size;
-    List<Bucket<T> > buckets;
+    List<Bucket> buckets;
     
     HashSet() {
         _size = 0;
-        buckets.append(Bucket<T>());
-        buckets.append(Bucket<T>());
+        buckets.append(Bucket());
+        buckets.append(Bucket());
     }
     
     void add(T t){
@@ -69,6 +71,8 @@ struct HashSet {
         }
     }
     
+    
+    
     bool contains(T t){
         int h = hash(t);
         h = h % buckets.size();
@@ -80,8 +84,8 @@ struct HashSet {
     }
     
     void rehash() {
-        List<Bucket<T> > new_buckets;
-        new_buckets.set_and_fill(buckets.size() * 2, Bucket<T>());
+        List<Bucket> new_buckets;
+        new_buckets.set_and_fill(buckets.size() * 2, Bucket());
         for (int i = 0; i < buckets.size(); i += 1) {
             for (int j = 0; j < buckets[i].buck.size(); j += 1) {
                 T d = buckets[i].buck[j];
@@ -92,6 +96,7 @@ struct HashSet {
         }
         buckets = new_buckets;
     }
+
 };
 
 /*
@@ -133,7 +138,162 @@ String obj_to_string(const HashSet<T>& set) {
     return result;
 }
 
+template <typename K, typename V>
+struct HashMap {
+    struct Item {
+        K key;
+        V value;
+        
+        Item(){
+            printf("(creating %s -> %s)", obj_to_string(key).str(), obj_to_string(value).str());
+        }
+        
+        Item(const Item& other){
+            printf("(copy from %s -> %s)", obj_to_string(other.key).str(), obj_to_string(other.value).str());
+        }
+        
+        ~Item(){
+            printf("(deleting %s -> %s)", obj_to_string(key).str(), obj_to_string(value).str());
+        }
+        
+        Item(const K& k, const V& v)
+            : key(k), value(v)
+        {}
+        
+        
+    };
+    
+    struct Bucket {
+        List<Item> list_of_items;
+        
+        Bucket(){
+        }
+        
+        int size(){return list_of_items.size();}
+        
+        void add(K k, V v){
+            Item t(k, v);
+            list_of_items.append(t);
+        }
+        
+        void add(Item t) {add(t.key, t.value);}
+        
+        bool contains(K k) {
+            for (int j = 0; j < list_of_items.size(); j += 1) {
+                if (k == list_of_items[j].key) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        Item operator[](K k){
+            for(int i = 0; i < size(); i += 1){
+                if (k == list_of_items[i].key) {
+                    return list_of_items[i];
+                }
+            }
+            
+        }
+        
+    };
+    int _size;
+    List<Bucket>  buckets;
+    
+    HashMap() {
+        _size=0; 
+        buckets.append(Bucket()); 
+        buckets.append(Bucket());
+        buckets.append(Bucket());
+        buckets.append(Bucket());
+        printf("\n\ndone creating map\n");
+    }
+    
+    V get(K key, V def_value=V());
+    
+    void add(K key, V value);    
+    
+    V operator[](K key);
+    
+    void rehash();
+    
+    bool contains(K k);
+    
+    int size(){return _size;}
+};
+template<typename K, typename V> 
+int hash(const typename HashMap<K, V>::Item& i){
+     return hash(i.key);
+}
+
+template<typename K, typename V> 
+void HashMap<K, V>::add(K key, V value){
+    int h = hash(key);
+    h = h % buckets.size();
+    if (contains(key)) {
+        buckets[h][key] = Item(key, value);
+    } else {
+        _size += 1;
+        buckets[h].add(key, value);
+        if (size() * 0.75 > buckets.size()){
+            rehash();
+        }
+    }
+}
+
+template<typename K, typename V>
+void HashMap<K, V>::rehash() {
+    List<Bucket> new_buckets;
+    new_buckets.set_and_fill(buckets.size() * 2, Bucket());
+    for (int i = 0; i < buckets.size(); i += 1) {
+        for (int j = 0; j < buckets[i].list_of_items.size(); j += 1) {
+            K d = buckets[i].list_of_items[j].key;
+            int h = hash(d);
+            h = h % new_buckets.size();
+            new_buckets[h].add(buckets[i].list_of_items[j]);
+        }
+    }
+    buckets = new_buckets;
+}
+
+template<typename K, typename V>
+bool HashMap<K, V>::contains(K k){
+    int h = hash(k);
+    h = h % buckets.size();
+    return buckets[h].contains(k);
+}
+
+
+template < typename K, typename V > 
+String obj_to_string(const HashMap<K, V>& set) {
+    String result("{");
+    
+    bool write_comma = false;
+    
+    for (int i = 0; i < set.buckets.size(); i += 1) {
+        for (int j = 0; j < set.buckets[i].list_of_items.size(); j += 1) {
+            typename HashMap<K, V>::Item d = set.buckets[i].list_of_items[j];
+            if (write_comma) {
+                result += String(", ");
+            } else {
+                write_comma = true;
+            }
+            result += obj_to_string(d.key) + ": " + obj_to_string(d.value);
+        }
+    }
+        
+    result += String("}");
+    return result;
+}
+
+
 void test(){
+    HashMap<String, int> m;
+    m.add("hhh", 8);
+    // m.add("hh", 88);
+    m.add("hhh", 9);
+    printf("map is %s\n", obj_to_string(m).str());
+    return;
     HashSet<int> h;
     printf("begin\nsize is %d\nhash is %s\n", h.size(), obj_to_string(h).str());
     h.add(1);
