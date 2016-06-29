@@ -36,13 +36,13 @@ struct List {
     T* elements;
     int _size;
     int _capacity;
-    
+
     List() {
         elements = NULL;
         _size = 0;
         _capacity = 0;
     }
-    
+
     List(const T* array, int array_size) {
         elements = NULL;
         _size = 0;
@@ -52,18 +52,18 @@ struct List {
         copy_n(elements, array, array_size);
         _size = array_size;
     }
-    
+
     ~List() {
         delete[] elements;
     }
-    
+
     List(const List<T>& other) {
         elements = new T[other.capacity()];
         copy_n(elements, other.elements, other.size());
         _size = other.size();
         _capacity = other.capacity();
     }
-    
+
     List& operator=(const List<T>& other) {
         if (this != &other) {
             delete[] elements;
@@ -74,34 +74,34 @@ struct List {
         }
         return *this;
     }
-    
+
     void insert(int index, const T& value) {
         ensure_capacity(size() + 1);
 
         copy_n(elements + index + 1, elements + index, size() - index);
-        
+
         elements[index] = value;
 
         _size += 1;
     }
-    
+
     void erase(int index) {
         copy_n(elements + index, elements + index + 1, size() - (index + 1));
         _size -= 1;
     }
-    
+
     void append(const T& value) {
         insert(size(), value);
     }
-    
+
     int size() const {
         return _size;
     }
-    
+
     int capacity() const {
         return _capacity;
     }
-    
+
     void ensure_capacity(int required_capacity) {
         if (capacity() >= required_capacity) {
             return;
@@ -114,7 +114,7 @@ struct List {
         elements = new_elements;
         _capacity = required_capacity;
     }
-    
+
     List<T> reverse() {
         List<T> new_list;
         for (int i = size() - 1; i >= 0; i -= 1) {
@@ -122,22 +122,41 @@ struct List {
         }
         return new_list;
     }
-    
+
     const T& operator[](int index) const {
         return elements[index];
     }
-    
+
     const T& get(int index, const T& def = T()) const {
         if (index >= size()) {
             return def;
         }
         return (*this)[index];
     }
-    
+
+
+	bool in(const T& t) const {
+		for (int i = 0; i < size(); i += 1) {
+			if(t == elements[i]){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	int find(const T& t) const {
+		for (int i = 0; i < size(); i += 1) {
+			if(t == elements[i]){
+				return i;
+			}
+		}
+		return -1;
+	}
+
     T& operator[](int index) {
         return elements[index];
     }
-    
+
     T& set_and_fill(int index, const T& value, const T& fill_value = T()) {
         ensure_capacity(index + 1);
         for (int i = size(); i < index; i += 1) {
@@ -147,7 +166,7 @@ struct List {
         _size = max(size(), index + 1);
         return (*this)[index];
     }
-    
+
     List<T>& operator+=(const List<T>& other) {
        ensure_capacity(size() + other.size());
        copy_n(elements + size(), other.elements, other.size());
@@ -166,13 +185,13 @@ List<T> operator+(const List<T>& list1, const List<T>& list2) {
 template <typename T>
 bool operator==(const List<T>& list1, const List<T>& list2){
     if (list1.size() != list2.size()){ return false; }
-    
+
     for (int i = 0; i < list1.size() ;i += 1) {
         if(!(list1[i] == list2[i] )) {
             return false;
-        } 
+        }
     }
-    return true; 
+    return true;
 }
 
 
@@ -182,22 +201,22 @@ bool operator==(const List<T>& list1, const List<T>& list2){
 
 struct String {
     List<char> _str;
-    
+
     String(const char* s = "");
-    
+
     String& operator+=(const String& other);
-    
+
     String& operator+=(char c);
-    
+
     const char* str() const;
     int len() const;
-    
+
     void print() const;
-    
+
     char operator[](int index) const;
-     
+
     char& operator[](int index);
-    
+
 };
 
 String::String(const char* s)
@@ -206,7 +225,7 @@ String::String(const char* s)
 }
 
 char String::operator[](int index) const {
-    return _str[index];    
+    return _str[index];
 }
 
 
@@ -265,13 +284,15 @@ bool operator==(const String& s1, const String& s2) {
 // LongInt
 //
 struct LongInt;
-LongInt operator-(const LongInt& l1, const LongInt& l2);
 bool operator<(const LongInt& l1, const LongInt& l2);
-bool operator<(const LongInt& l, int i);
+
+LongInt operator-(const LongInt& l1, const LongInt& l2);
+LongInt operator/(const LongInt& l1, const LongInt& l2);
+LongInt operator*(const LongInt& l1, const LongInt& l2);
+LongInt operator+(const LongInt& l1, const LongInt& l2);
+
 template <typename T>
 void print(const T& obj, const char* end = "");
-LongInt operator*(const LongInt& l, int i);
-LongInt operator+(const LongInt& l, int i);
 
 template <typename T>
 String obj_to_string(const List<T>& list);
@@ -302,7 +323,7 @@ void add_arrays(List<int>& target, const List<int>& source) {
 struct LongInt {
     List<int> _digits;
     bool is_negative;
-    
+
     LongInt() {
         _digits.append(0);
         is_negative = false;
@@ -319,7 +340,7 @@ struct LongInt {
             _digits.append(char_to_digit(s[len_s - (i+1)]));
         }
     }
-    
+
     LongInt(int ix) {
         is_negative = ix < 0;
         if (is_negative) {
@@ -334,12 +355,12 @@ struct LongInt {
             }
         }
     }
-    
+
     LongInt(const List<int>& list, bool neg=false){
         _digits = list;
-        is_negative = neg;        
+        is_negative = neg;
     }
-    
+
     void erase_leading_zeroes() {
         for (int i = _digits.size() - 1; i > 0; i -= 1) {
             if (_digits[i] != 0) {
@@ -348,22 +369,22 @@ struct LongInt {
             _digits.erase(i);
         }
     }
-    
+
     const List<int>& digits() const {
         return _digits;
     }
-    
+
     LongInt abs() const {
         LongInt result = *this;
         result.is_negative = false;
         return result;
     }
-    
+
     LongInt& operator+=(int i) {
         LongInt m = i;
         return (*this) += m;
     }
-    
+
     LongInt& operator+=(const LongInt& other) {
         if (is_negative != other.is_negative) {
             return (*this) -= -other;
@@ -371,11 +392,11 @@ struct LongInt {
         add_arrays(_digits, other._digits);
         return *this;
     }
-    
-        
+
+
     LongInt& operator*=(const LongInt& other) {
         LongInt result;
-        
+
         int subresult_offset = 0;
         for (int i = 0; i < _digits.size(); i += 1) {
             LongInt subresult;
@@ -388,20 +409,22 @@ struct LongInt {
             if (subresult_carry != 0) {
                 subresult._digits.set_and_fill(other._digits.size() + subresult_offset, subresult_carry);
             }
-            
+
             result += subresult;
             subresult_offset += 1;
         }
         (*this) = result;
         return *this;
     }
-    
+
+	int len(){return digits().size();}
+
     LongInt operator-() const {
         LongInt result = *this;
         result.is_negative = !result.is_negative;
         return result;
     }
-    
+
     LongInt& operator-=(const LongInt& other) {
         if (is_negative != other.is_negative) {
             return (*this) += -other;
@@ -434,9 +457,9 @@ struct LongInt {
         if (sub < 0) {
             is_negative = !is_negative;
         }
-        return *this;            
+        return *this;
     }
-    
+
     LongInt operator/=(const LongInt& other) {
         if (digits().size() < other.digits().size()){
             LongInt result;
@@ -461,6 +484,16 @@ struct LongInt {
         (*this) = result;
         return *this;
     }
+
+	LongInt operator%(LongInt other) {
+		LongInt result = *this;
+		return result - (result / other) * other;
+	}
+
+	bool operator==(const LongInt& other) const {
+		return is_negative == other.is_negative && digits() == other.digits();
+	}
+
 };
 
 LongInt operator-(const LongInt& l1, const LongInt& l2){
@@ -493,7 +526,7 @@ bool operator<(const LongInt& l1, const LongInt& l2) {
     if (l1.is_negative && l2.is_negative) {
         abs_result = false;
     }
-    
+
     for (int i = max(l1.digits().size(),l2.digits().size()); i >= 0; i -= 1) {
         if (l1.digits().get(i) < l2.digits().get(i)){
             return abs_result;
@@ -502,6 +535,11 @@ bool operator<(const LongInt& l1, const LongInt& l2) {
         }
     }
     return false;
+}
+
+LongInt operator/(const LongInt& l1, const LongInt& l2){
+	LongInt result = l1;
+	return result /= l2;
 }
 
 template <typename T>
@@ -537,7 +575,7 @@ struct Node {
     Node<T>* _left   = NULL;
     Node<T>* _right  = NULL;
     T _us_value;
-    
+
     Node<T>* left() const {
         return _left;
     }
@@ -547,19 +585,19 @@ struct Node {
     const T& value() const {
         return _us_value;
     }
-    
+
     Node(const T& value_input) {
         _us_value = value_input;
     }
-    
+
     void set_right(Node<T>* node) {
         _right = node;
     }
-    
+
     void set_left(Node<T>* node) {
         _left = node;
     }
-    
+
 };
 
 //
@@ -570,7 +608,7 @@ template <typename T>
 struct Tree {
     Node<T>* root = NULL;
     List<T> list;
-    
+
     void add_in_fking_tree(const T& value, Node<T>& node) {
         // printf("Rekursia number is <should be a number>\n");
         const T& node_value = node.value();
@@ -594,7 +632,7 @@ struct Tree {
     void set_root(Node<T>* node) {
         root = node;
     }
-        
+
     void add(const T& value_input) {
         // printf("TREEEE!!!\n");
         if (root == NULL){
@@ -604,7 +642,7 @@ struct Tree {
         // printf("CONTINUE!!!\n");
         add_in_fking_tree(value_input, *root);
     }
-    
+
     void sorted_tree(Node<T>& node) {
         if (node.left()) {
             sorted_tree(*node.left());
@@ -614,7 +652,7 @@ struct Tree {
             sorted_tree(*node.right());
         }
     }
-    
+
 };
 
 //
@@ -650,7 +688,7 @@ String obj_to_string(const LongInt& number) {
     if (number.is_negative){
         result += '-';
     }
-    
+
     bool nonzero_found = false;
     for (int i = number.digits().size() - 1; i > -1; i -= 1){
         int d = number.digits()[i];
@@ -663,7 +701,7 @@ String obj_to_string(const LongInt& number) {
         result += '0';
     }
     return result;
-    
+
 }
 
 void clear(){
@@ -687,7 +725,7 @@ void print(const T& obj, const char* end = "") {
     printf("%s%s", obj_to_string(obj).str(), end);
 }
 
-// Fiba 
+// Fiba
 void num_fib() {
     LongInt f1("1");
     LongInt f2("1");
@@ -714,7 +752,7 @@ int divisor_sum(int x){
     return sum;
 }
 
-    
+
 
 
 
