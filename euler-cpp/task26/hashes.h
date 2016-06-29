@@ -123,6 +123,7 @@ String obj_to_string(const HashSet<T>& set) {
 }
 
  */
+/*
 template < typename T > 
 String obj_to_string(const HashSet<T>& set) {
     String result("{");
@@ -138,75 +139,78 @@ String obj_to_string(const HashSet<T>& set) {
     return result;
 }
 
+ */
+template <typename K, typename V>
+struct Item {
+	K key;
+	V value;
+	
+	Item(){
+	}
+	
+	Item(const Item& other){
+		key = other.key;
+		value = other.value;
+	}
+	
+	~Item(){
+	}
+	
+	Item(const K& k, const V& v)
+		: key(k), value(v)
+	{
+	}
+	
+	
+};
+
+template <typename K, typename V>
+struct Bucket {
+	List< Item<K, V> > list_of_items;
+	
+	Bucket(){
+	}
+	
+	int size(){return list_of_items.size();}
+	
+	void add(K k, V v){
+		Item<K, V> t(k, v);
+		list_of_items.append(t);
+	}
+	
+	void add(Item<K, V> t) {
+		add(t.key, t.value);
+	}
+	
+	bool contains(K k) {
+		for (int j = 0; j < list_of_items.size(); j += 1) {
+			if (k == list_of_items[j].key) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	Item<K, V>& operator[](K k) {
+		int index=0;
+		for(int i = 0; i < size(); i += 1){
+			if (k == list_of_items[i].key) {
+				index = i;
+			}
+		}
+		return list_of_items[index];
+	}
+	
+};
+
 template <typename K, typename V>
 struct HashMap {
-    struct Item {
-        K key;
-        V value;
-        
-        Item(){
-            printf("(creating %s -> %s)", obj_to_string(key).str(), obj_to_string(value).str());
-        }
-        
-        Item(const Item& other){
-            printf("(copy from %s -> %s)", obj_to_string(other.key).str(), obj_to_string(other.value).str());
-        }
-        
-        ~Item(){
-            printf("(deleting %s -> %s)", obj_to_string(key).str(), obj_to_string(value).str());
-        }
-        
-        Item(const K& k, const V& v)
-            : key(k), value(v)
-        {}
-        
-        
-    };
-    
-    struct Bucket {
-        List<Item> list_of_items;
-        
-        Bucket(){
-        }
-        
-        int size(){return list_of_items.size();}
-        
-        void add(K k, V v){
-            Item t(k, v);
-            list_of_items.append(t);
-        }
-        
-        void add(Item t) {add(t.key, t.value);}
-        
-        bool contains(K k) {
-            for (int j = 0; j < list_of_items.size(); j += 1) {
-                if (k == list_of_items[j].key) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        Item operator[](K k){
-            for(int i = 0; i < size(); i += 1){
-                if (k == list_of_items[i].key) {
-                    return list_of_items[i];
-                }
-            }
-            
-        }
-        
-    };
     int _size;
-    List<Bucket>  buckets;
+    List< Bucket<K, V> >  buckets;
     
     HashMap() {
         _size=0; 
-        buckets.append(Bucket()); 
-        buckets.append(Bucket());
-        buckets.append(Bucket());
-        buckets.append(Bucket());
-        printf("\n\ndone creating map\n");
+        buckets.append(Bucket<K, V>());
     }
     
     V get(K key, V def_value=V());
@@ -221,6 +225,39 @@ struct HashMap {
     
     int size(){return _size;}
 };
+template < typename K, typename V > String obj_to_string(const Item<K, V>& item) {
+	return obj_to_string(item.key) + " -> " + obj_to_string(item.value);
+}
+
+template < typename K, typename V > String obj_to_string(const Bucket<K, V>& bucket) {
+	return obj_to_string(bucket.list_of_items);
+}
+
+
+template < typename K, typename V > 
+String obj_to_string(const HashMap<K, V>& set) {
+    String result("{");
+    
+    bool write_comma = false;
+    
+    for (int i = 0; i < set.buckets.size(); i += 1) {
+        for (int j = 0; j < set.buckets[i].list_of_items.size(); j += 1) {
+            Item<K, V> d = set.buckets[i].list_of_items[j];
+            if (write_comma) {
+                result += String(", ");
+            } else {
+                write_comma = true;
+            }
+            result += obj_to_string(d.key) + ": " + obj_to_string(d.value);
+        }
+    }
+        
+    result += String("}");
+    return result;
+}
+
+
+
 template<typename K, typename V> 
 int hash(const typename HashMap<K, V>::Item& i){
      return hash(i.key);
@@ -231,7 +268,7 @@ void HashMap<K, V>::add(K key, V value){
     int h = hash(key);
     h = h % buckets.size();
     if (contains(key)) {
-        buckets[h][key] = Item(key, value);
+        buckets[h][key] = Item<K, V>(key, value);
     } else {
         _size += 1;
         buckets[h].add(key, value);
@@ -243,8 +280,8 @@ void HashMap<K, V>::add(K key, V value){
 
 template<typename K, typename V>
 void HashMap<K, V>::rehash() {
-    List<Bucket> new_buckets;
-    new_buckets.set_and_fill(buckets.size() * 2, Bucket());
+    List< Bucket<K, V> > new_buckets;
+    new_buckets.set_and_fill(buckets.size() * 2, Bucket<K, V>());
     for (int i = 0; i < buckets.size(); i += 1) {
         for (int j = 0; j < buckets[i].list_of_items.size(); j += 1) {
             K d = buckets[i].list_of_items[j].key;
@@ -264,37 +301,16 @@ bool HashMap<K, V>::contains(K k){
 }
 
 
-template < typename K, typename V > 
-String obj_to_string(const HashMap<K, V>& set) {
-    String result("{");
-    
-    bool write_comma = false;
-    
-    for (int i = 0; i < set.buckets.size(); i += 1) {
-        for (int j = 0; j < set.buckets[i].list_of_items.size(); j += 1) {
-            typename HashMap<K, V>::Item d = set.buckets[i].list_of_items[j];
-            if (write_comma) {
-                result += String(", ");
-            } else {
-                write_comma = true;
-            }
-            result += obj_to_string(d.key) + ": " + obj_to_string(d.value);
-        }
-    }
-        
-    result += String("}");
-    return result;
-}
-
-
 void test(){
     HashMap<String, int> m;
     m.add("hhh", 8);
-    // m.add("hh", 88);
+    printf("\n=====================\nmap is %s\n=====================\n", obj_to_string(m).str());
+    m.add("hh", 88);
+    printf("\n=====================\nmap is %s\n=====================\n", obj_to_string(m).str());
     m.add("hhh", 9);
-    printf("map is %s\n", obj_to_string(m).str());
+    printf("\n=====================\nmap is %s\n=====================\n", obj_to_string(m).str());
     return;
-    HashSet<int> h;
+/*     HashSet<int> h;
     printf("begin\nsize is %d\nhash is %s\n", h.size(), obj_to_string(h).str());
     h.add(1);
     h.add(3);
@@ -321,4 +337,4 @@ void test(){
     printf("for \"cba\" Hash = %d\n", hash("cba"));
     printf("for \"abcdef\" Hash = %d\n", hash("abcdef"));
     printf("for \"000\" Hash = %d\n", hash("000"));
-}
+ */}

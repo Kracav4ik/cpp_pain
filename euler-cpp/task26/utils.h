@@ -107,7 +107,7 @@ struct List {
             return;
         }
         required_capacity = max(required_capacity, 2*capacity());
-        required_capacity = max(required_capacity, 16);
+        required_capacity = max(required_capacity, 4);
         T* new_elements = new T[required_capacity];
         copy_n(new_elements, elements, size());
         delete [] elements;
@@ -635,11 +635,11 @@ template <typename T>
 String obj_to_string(const List<T>& list) {
     String result("[");
     for (int i = 0; i < list.size(); i += 1){
-        T d = list.elements[i];
+        const T& t = list.elements[i];
         if (i > 0) {
             result += String(", ");
         }
-        result += obj_to_string(d);
+        result += obj_to_string(t);
     }
     result += String("]");
     return result;
@@ -665,7 +665,6 @@ String obj_to_string(const LongInt& number) {
     return result;
     
 }
-
 
 void clear(){
     for (int i = 0; i < 97; i += 1) {
