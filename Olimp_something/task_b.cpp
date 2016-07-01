@@ -6,15 +6,19 @@
 
 
 int main() {
-	TextFile file;
-	if (file.open("task_b.cpp")) {
-		while (true) {
-			String s = file.read_line();
-			if (s.is_empty()) {
-				break;
-			}
-			printf("%s",s.str());
-		}
-	}
+    // TextFile file;
+    // if (file.open("birthday.in")) {
+        // while (true) {
+            // String s = file.read_line();
+            // if (s.is_empty()) {
+                // break;
+            // }
+            // printf("%s",s.str());
+        // }
+    // }
+
+    String s("aaabbbccc");
+    printf("strip >>>%s<<<\n", obj_to_string(s.strip("ab","bc")).str());
+
     return 0;
 }

@@ -27,6 +27,25 @@ void copy_n(T* to, const T* from, int count) {
     }
 }
 
+template <typename T1, typename T2>
+bool equals_n(T1 list1, T2 list2, int count){
+    for (int i = 0; i < count; i += 1) {
+        if(!(list1[i] == list2[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool startswith(const char* s, const char* prefix) {
+    int len_s = strlen(s);
+    int len_prefix = strlen(prefix);
+    if (len_prefix > len_s) {
+        return false;
+    }
+    return equals_n(s, prefix, len_prefix);
+}
+
 //
 // List
 //
@@ -43,6 +62,16 @@ struct List {
         _capacity = 0;
     }
 
+    List(const T* array, int array_size, int capacity) {
+        elements = NULL;
+        _size = 0;
+        _capacity = 0;
+
+        ensure_capacity(capacity);
+        copy_n(elements, array, array_size);
+        _size = array_size;    
+    }
+    
     List(const T* array, int array_size) {
         elements = NULL;
         _size = 0;
@@ -135,18 +164,18 @@ struct List {
     }
 
 
-	bool in(const T& t) const {
-		return find(t) != -1;
-	}
+    bool in(const T& t) const {
+        return find(t) != -1;
+    }
 
-	int find(const T& t) const {
-		for (int i = 0; i < size(); i += 1) {
-			if(t == elements[i]){
-				return i;
-			}
-		}
-		return -1;
-	}
+    int find(const T& t) const {
+        for (int i = 0; i < size(); i += 1) {
+            if(t == elements[i]){
+                return i;
+            }
+        }
+        return -1;
+    }
 
     T& operator[](int index) {
         return elements[index];
@@ -179,14 +208,11 @@ List<T> operator+(const List<T>& list1, const List<T>& list2) {
 
 template <typename T>
 bool operator==(const List<T>& list1, const List<T>& list2){
-    if (list1.size() != list2.size()){ return false; }
-
-    for (int i = 0; i < list1.size() ;i += 1) {
-        if(!(list1[i] == list2[i] )) {
-            return false;
-        }
+    if (list1.size() != list2.size()) {
+        return false;
     }
-    return true;
+
+    return equals_n(list1, list2, list1.size());
 }
 
 
@@ -197,10 +223,14 @@ bool operator==(const List<T>& list1, const List<T>& list2){
 struct String {
     List<char> _str;
 
+    static const String WHITESPACE;
+
     String(const char* s = "");
 
     String& operator+=(const String& other);
 
+    String(const char* s, int size);
+    
     String& operator+=(char c);
 
     const char* str() const;
@@ -208,17 +238,32 @@ struct String {
 
     void print() const;
 
-	bool is_empty();
+    bool is_empty();
 
     char operator[](int index) const;
 
     char& operator[](int index);
 
+    String substring(int index1, int index2) const;
+    
+    List<String> split(const String& separator) const;
+    
+    bool in(char c) const;
+    
+    String strip(const String& left=WHITESPACE, const String& right=WHITESPACE) const;
 };
+
+const String String::WHITESPACE = " \t\r\n";
 
 String::String(const char* s)
     : _str(s, strlen(s) + 1)
 {
+}
+
+String::String(const char* s, int size)
+    : _str(s, size, size + 1)
+{
+    _str.append(0);
 }
 
 char String::operator[](int index) const {
@@ -237,7 +282,7 @@ String& String::operator+=(const String& other) {
 }
 
 bool String::is_empty() {
-	return len() == 0;
+    return len() == 0;
 }
 
 
@@ -251,11 +296,73 @@ const char* String::str() const {
 }
 
 int String::len() const {
-	return _str.size() - 1;
+    return _str.size() - 1;
 }
 
 void String::print() const {
     printf("{String [%p] '%s' len %d}\n", this, str(), len());
+}
+
+String String::substring(int index1, int index2) const {
+    if (index2 < index1 || index1 < 0 || index2 > len()) {
+        return "";
+    }
+    return String(str() + index1, index2 - index1);
+}
+
+template <typename T>
+String obj_to_string(const List<T>& list);
+
+
+List<String> String::split(const String& separator) const {
+    List<String> result;
+    
+    printf("split '%s' separator '%s'\n", str(), separator.str());
+    
+    int i1 = 0;
+    int i2 = 0;
+    while (i2 < len()){
+        printf("  i1 %d, i2 %d, len %d\n",i1, i2, len());
+        printf("  res >>>%s<<<\n", obj_to_string(result).str());
+        if (startswith(str() + i2, separator.str())) {
+            result.append(substring(i1, i2));
+            printf("    sub '%s'\n", substring(i1, i2).str());
+            i1 = i2 + separator.len();
+            printf("    res '%s'\n", obj_to_string(result).str());
+            i2 = i1;
+        } else {            
+            i2 += 1;
+        }
+    }
+    printf("  <final>\n");
+    printf("    sub '%s'\n", substring(i1, i2).str());
+    result.append(substring(i1, i2));
+    printf("    res '%s'\n", obj_to_string(result).str());
+    
+    return result;
+}
+
+bool String::in(char c) const {
+    return c != 0 && _str.in(c);
+}
+
+String String::strip(const String& left, const String& right) const {
+    int i1 = 0;
+    int i2 = len() - 1;
+    
+    for (; i1 < len(); i1 += 1) {
+        if (!left.in(_str[i1])) {
+            break;
+        }
+    }
+    
+    for (; i1 <= i2; i2 -= 1) {
+        if (!right.in(_str[i2])) {
+            break;
+        }
+    }
+    return substring(i1, i2 + 1);
+    
 }
 
 String operator+(const String& s1, const String& s2) {
@@ -296,8 +403,6 @@ LongInt operator+(const LongInt& l1, const LongInt& l2);
 template <typename T>
 void print(const T& obj, const char* end = "");
 
-template <typename T>
-String obj_to_string(const List<T>& list);
 
 String obj_to_string(const LongInt& number);
 
@@ -419,8 +524,8 @@ struct LongInt {
         return *this;
     }
 
-	int len(){
-	    return digits().size();
+    int len(){
+        return digits().size();
     }
 
     LongInt operator-() const {
@@ -489,14 +594,14 @@ struct LongInt {
         return *this;
     }
 
-	LongInt operator%(LongInt other) {
-		LongInt result = *this;
-		return result - (result / other) * other;
-	}
+    LongInt operator%(LongInt other) {
+        LongInt result = *this;
+        return result - (result / other) * other;
+    }
 
-	bool operator==(const LongInt& other) const {
-		return is_negative == other.is_negative && digits() == other.digits();
-	}
+    bool operator==(const LongInt& other) const {
+        return is_negative == other.is_negative && digits() == other.digits();
+    }
 
 };
 
@@ -541,8 +646,8 @@ bool operator<(const LongInt& l1, const LongInt& l2) {
 }
 
 LongInt operator/(const LongInt& l1, const LongInt& l2) {
-	LongInt result = l1;
-	return result /= l2;
+    LongInt result = l1;
+    return result /= l2;
 }
 
 template <typename T>
@@ -754,8 +859,3 @@ int divisor_sum(int x){
     }
     return sum;
 }
-
-
-
-
-
